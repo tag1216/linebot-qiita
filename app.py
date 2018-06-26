@@ -19,7 +19,6 @@ import sys
 import typing
 from argparse import ArgumentParser
 from itertools import repeat
-from re import Match
 
 from flask import Flask, request, abort
 
@@ -120,7 +119,7 @@ def message_text(event):
 
 
 @text_pattern_handler.add(pattern=r'^items$')
-def reply_items(event: MessageEvent, match: Match):
+def reply_items(event: MessageEvent, match):
 
     items = qiita.get_items(10)
 
@@ -140,7 +139,7 @@ def reply_items(event: MessageEvent, match: Match):
 
 
 @text_pattern_handler.add(pattern=r'^users/(.+)$')
-def reply_user(event: MessageEvent, match: Match):
+def reply_user(event: MessageEvent, match):
 
     user_name = match.group(1)
 
@@ -161,7 +160,7 @@ def reply_user(event: MessageEvent, match: Match):
 
 
 @text_pattern_handler.add(pattern=r'^tags/(.+)$')
-def reply_tag(event: MessageEvent, match: Match):
+def reply_tag(event: MessageEvent, match):
 
     tag_name = match.group(1)
 

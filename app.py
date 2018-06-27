@@ -33,7 +33,7 @@ from linebot.exceptions import (
 from linebot.models import (
     MessageEvent, TextMessage,
     FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, CarouselContainer, ImageComponent, FillerComponent,
-    SeparatorComponent, MessageAction, TextSendMessage)
+    SeparatorComponent, MessageAction, TextSendMessage, URIAction)
 
 app = Flask(__name__)
 
@@ -230,7 +230,8 @@ def create_items_content(item: qiita.Item):
                     wrap=True,
                     weight='bold',
                     color='#444444',
-                    size='lg'
+                    size='lg',
+                    action=item_action(item)
                 ),
                 BoxComponent(
                     layout='horizontal',
@@ -300,6 +301,7 @@ def create_user_item_content(item):
             TextComponent(
                 size='sm',
                 text=item.title,
+                action=item_action(item)
             ),
             BoxComponent(
                 layout='horizontal',
@@ -375,6 +377,7 @@ def create_tag_content(tag, items):
                                             text=item.title,
                                             wrap=True,
                                             size='sm',
+                                            action=item_action(item)
                                         )
                                     ]
                                 )
@@ -385,6 +388,12 @@ def create_tag_content(tag, items):
                 ),
             )
         ]
+    )
+
+
+def item_action(item):
+    return URIAction(
+        uri=item.url
     )
 
 

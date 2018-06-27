@@ -78,6 +78,11 @@ class TextPatternHandler:
 text_pattern_handler = TextPatternHandler()
 
 
+@app.route('/')
+def index():
+    return 'It worked!'
+
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value

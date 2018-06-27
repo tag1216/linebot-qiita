@@ -1,7 +1,17 @@
 import dataclasses
+import os
 import typing
 
 import requests
+
+
+access_token = os.getenv('QIITA_ACCESS_TOKEN', None)
+
+headers = {}
+if access_token:
+    headers.update({
+        "Authorization": f"Bearer {access_token}"
+    })
 
 
 @dataclasses.dataclass
@@ -66,6 +76,7 @@ def get_items(per_page=10):
 
     response = requests.get(
         'https://qiita.com/api/v2/items',
+        headers=headers,
         params=dict(per_page=per_page)
     )
     data = response.json()
@@ -79,6 +90,7 @@ def get_user_items(user_name, per_page=10):
 
     response = requests.get(
         f'https://qiita.com/api/v2/users/{user_name}/items',
+        headers=headers,
         params=dict(per_page=per_page)
     )
     data = response.json()
@@ -92,6 +104,7 @@ def get_tag_items(tag_name, per_page=10):
 
     response = requests.get(
         f'https://qiita.com/api/v2/tags/{tag_name}/items',
+        headers=headers,
         params=dict(per_page=per_page)
     )
     data = response.json()
@@ -104,7 +117,8 @@ def get_tag_items(tag_name, per_page=10):
 def get_tag(tag_name):
 
     response = requests.get(
-        f'https://qiita.com/api/v2/tags/{tag_name}'
+        f'https://qiita.com/api/v2/tags/{tag_name}',
+        headers=headers
     )
     data = response.json()
 

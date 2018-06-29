@@ -16,24 +16,24 @@ import json
 import os
 import re
 import sys
-import typing
 from argparse import ArgumentParser
-from itertools import repeat
 from re import Match
 
 from flask import Flask, request, abort
-
-import qiita
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from linebot import (
     LineBotApi, WebhookHandler
 )
 from linebot.exceptions import (
     InvalidSignatureError,
-    LineBotApiError)
+    LineBotApiError
+)
 from linebot.models import (
     MessageEvent, TextMessage,
-    FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, CarouselContainer, ImageComponent, FillerComponent,
-    SeparatorComponent, MessageAction, TextSendMessage, URIAction)
+    FlexSendMessage, BubbleContainer, CarouselContainer, TextSendMessage
+)
+
+import qiita
 
 app = Flask(__name__)
 
@@ -49,6 +49,11 @@ if channel_access_token is None:
 
 line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
+
+template_env = Environment(
+    loader=FileSystemLoader('templates'),
+    autoescape=select_autoescape(['html', 'xml', 'json'])
+)
 
 
 class TextPatternHandler:
@@ -129,19 +134,18 @@ def reply_items(event: MessageEvent, match: Match):
 
     items = qiita.get_items(10)
 
-    message = FlexSendMessage(
-        alt_text="flex",
-        contents=CarouselContainer(
-            contents=[
-                create_items_content(item)
-                for item in items
-            ]
+    template = template_env.get_template('items.json')
+    data = template.render(dict(items=items))
+
+    print(data)
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        FlexSendMessage(
+            alt_text="items",
+            contents=CarouselContainer.new_from_json_dict(json.loads(data))
         )
     )
-
-    print(json.dumps(message.as_json_dict(), indent=2, sort_keys=True, ensure_ascii=False))
-
-    line_bot_api.reply_message(event.reply_token, message)
 
 
 @text_pattern_handler.add(pattern=r'^users/(.+)$')
@@ -152,15 +156,16 @@ def reply_user(event: MessageEvent, match: Match):
     items = qiita.get_user_items(user_name, 3)
     user = items[0].user
 
-    contents = create_user_content(user, items)
+    template = template_env.get_template('user.json')
+    data = template.render(dict(user=user, items=items))
 
-    print(json.dumps(contents.as_json_dict(), indent=2, sort_keys=True, ensure_ascii=False))
+    print(data)
 
     line_bot_api.reply_message(
         event.reply_token,
         FlexSendMessage(
-            alt_text='flex',
-            contents=contents
+            alt_text='user',
+            contents=BubbleContainer.new_from_json_dict(json.loads(data))
         )
     )
 
@@ -173,239 +178,17 @@ def reply_tag(event: MessageEvent, match: Match):
     tag = qiita.get_tag(tag_name)
     items = qiita.get_tag_items(tag_name, 5)
 
-    contents = create_tag_content(tag, items)
+    template = template_env.get_template('tag.json')
+    data = template.render(dict(tag=tag, items=items))
 
-    print(json.dumps(contents.as_json_dict(), indent=2, sort_keys=True, ensure_ascii=False))
+    print(data)
 
     line_bot_api.reply_message(
         event.reply_token,
         FlexSendMessage(
-            alt_text='flex',
-            contents=contents
+            alt_text='tag',
+            contents=CarouselContainer.new_from_json_dict(json.loads(data))
         )
-    )
-
-
-def create_items_content(item: qiita.Item):
-    return BubbleContainer(
-        header=BoxComponent(
-            layout='vertical',
-            contents=[
-                BoxComponent(
-                    layout='horizontal',
-                    contents=[
-                        TextComponent(
-                            flex=0,
-                            size='xxs',
-                            color='#aaaaaa',
-                            text=f'{item.created_at}に投稿'
-                        ),
-                        FillerComponent(),
-                        TextComponent(
-                            flex=0,
-                            size='xxs',
-                            color='#aaaaaa',
-                            text=f'{item.likes_count}いいね'
-                        )
-                    ]
-                ),
-                TextComponent(
-                    weight='bold',
-                    size='lg',
-                    color='#aaaaaa',
-                    text=item.user.id
-                ),
-            ],
-        ),
-        hero=ImageComponent(
-            url=item.user.profile_image_url,
-            action=user_action(item.user.id)
-        ),
-        body=BoxComponent(
-            layout='vertical',
-            spacing='sm',
-            contents=[
-                TextComponent(
-                    text=item.title,
-                    wrap=True,
-                    weight='bold',
-                    color='#444444',
-                    size='lg',
-                    action=item_action(item)
-                ),
-                BoxComponent(
-                    layout='horizontal',
-                    spacing='sm',
-                    contents=[
-                        TextComponent(
-                            flex=0,
-                            size='sm',
-                            color='#aaaaaa',
-                            text=tag.name,
-                            action=tag_action(tag.name)
-                        )
-                        for tag in item.tags
-                    ]
-                )
-            ]
-        )
-    )
-
-
-def create_user_content(user: qiita.User, items: typing.List[qiita.Item]):
-
-    contents = [create_user_item_content(item) for item in items]
-    separator = SeparatorComponent()
-    contents = sum(map(list, zip(contents, repeat(separator))), [])[:-1]
-
-    return BubbleContainer(
-        header=BoxComponent(
-            layout='vertical',
-            contents=[
-                TextComponent(
-                    text=user.id,
-                    weight='bold',
-                    color='#aaaaaa',
-                    size='lg'
-                )
-            ]
-        ),
-        hero=ImageComponent(
-            size='lg',
-            url=user.profile_image_url
-        ),
-        body=BoxComponent(
-            layout='vertical',
-            spacing='sm',
-            contents=[
-                TextComponent(
-                    wrap=True,
-                    text=user.description or ' '
-                ),
-                SeparatorComponent()
-            ] + contents
-        )
-    )
-
-
-def create_user_item_content(item):
-    return BoxComponent(
-        layout='vertical',
-        contents=[
-            TextComponent(
-                margin='md',
-                size='xxs',
-                color='#aaaaaa',
-                text=f'{item.created_at}に投稿'
-            ),
-            TextComponent(
-                size='sm',
-                text=item.title,
-                action=item_action(item)
-            ),
-            BoxComponent(
-                layout='horizontal',
-                spacing='sm',
-                contents=[
-                    TextComponent(
-                        flex=0,
-                        size='sm',
-                        color='#aaaaaa',
-                        text=tag.name,
-                        action=tag_action(tag.name)
-                    )
-                    for tag in item.tags
-                ]
-            ),
-            BoxComponent(
-                layout='horizontal',
-                spacing='sm',
-                contents=[
-                    FillerComponent(),
-                    TextComponent(
-                        flex=0,
-                        size='xxs',
-                        color='#aaaaaa',
-                        text=f'{item.likes_count}いいね'
-                    )
-                ]
-            )
-        ]
-    )
-
-
-def create_tag_content(tag, items):
-    return CarouselContainer(
-        contents=[
-            BubbleContainer(
-                header=BoxComponent(
-                    layout='vertical',
-                    contents=[
-                        TextComponent(
-                            text=tag.id,
-                            weight='bold',
-                            color='#aaaaaa',
-                            size='lg'
-                        ),
-                        TextComponent(
-                            text=f'{tag.items_count} items, {tag.followers_count} followers',
-                            color='#aaaaaa',
-                            size='xxs'
-                        )
-                    ]
-                ),
-                hero=ImageComponent(
-                    size='md',
-                    url=tag.icon_url
-                ),
-                body=BoxComponent(
-                    layout='vertical',
-                    spacing='sm',
-                    contents=[
-                        BoxComponent(
-                            layout='horizontal',
-                            contents=[
-                                ImageComponent(
-                                    url=item.user.profile_image_url,
-                                    size='sm',
-                                    action=tag_action(tag.id)
-                                ),
-                                BoxComponent(
-                                    layout='vertical',
-                                    contents=[
-                                        TextComponent(
-                                            text=item.title,
-                                            wrap=True,
-                                            size='sm',
-                                            action=item_action(item)
-                                        )
-                                    ]
-                                )
-                            ]
-                        )
-                        for item in items
-                    ]
-                ),
-            )
-        ]
-    )
-
-
-def item_action(item):
-    return URIAction(
-        uri=item.url
-    )
-
-
-def user_action(user_id):
-    return MessageAction(
-        text=f'users/{user_id}'
-    )
-
-
-def tag_action(tag_name):
-    return MessageAction(
-        text=f'tags/{tag_name}'
     )
 
 

@@ -73,6 +73,7 @@
                             {% for tag in item.tags %}
                             {
                                 "type": "text",
+                                "flex": 0,
                                 "size": "sm",
                                 "color": "#aaaaaa",
                                 "text": "{{ tag.name }}",

@@ -48,8 +48,8 @@
                         "size": "sm",
                         "text": "{{ item.title }}",
                         "action": {
-                            "type": "message",
-                            "text": "{{ item.id }}"
+                            "type": "uri",
+                            "uri": "{{ item.url }}"
                         }
                     },
                     {
@@ -66,7 +66,7 @@
                                 "text": "{{ tag.name }}",
                                 "action": {
                                     "type": "message",
-                                    "text": "{{ tag.name }}"
+                                    "text": "tags/{{ tag.name }}"
                                 }
                             }{{ "," if not loop.last }}
                             {% endfor %}
@@ -90,7 +90,7 @@
                         ]
                     }
                 ]
-            }
+            }{{ ',' if not loop.last }}
             {% endfor %}
         ]
     }

@@ -1,0 +1,72 @@
+{
+    "type": "carousel",
+    "contents": [
+        {
+            "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "{{ tag.id }}",
+                        "weight": "bold",
+                        "color": "#aaaaaa",
+                        "size": "lg"
+                    },
+                    {
+                        "type": "text",
+                        "text": "{{ tag.items_count }} items, {{ tag.followers_count }} followers",
+                        "color": "#aaaaaa",
+                        "size": "xxs"
+                    }
+                ]
+            },
+            "hero": {
+                "type": "image",
+                "size": "md",
+                "url": "{{ tag.icon_url }}"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "sm",
+                "contents": [
+                    {% for item in items %}
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {
+                                "type": "image",
+                                "url": "{{ item.user.profile_image_url }}",
+                                "size": "sm",
+                                "action": {
+                                    "type": "message",
+                                    "text": "users/{{ item.user.id }}"
+                                }
+                            },
+                            {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "{{ item.title }}",
+                                        "wrap": true,
+                                        "size": "sm",
+                                        "action": {
+                                            "type": "uri",
+                                            "uri": "{{ item.url }}"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }{{ ',' if not loop.last }}
+                    {% endfor %}
+                ]
+            }
+        }
+    ]
+}

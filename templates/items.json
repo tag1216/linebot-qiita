@@ -1,0 +1,93 @@
+{
+    "type": "carousel",
+    "contents": [
+        {% for item in items %}
+        {
+            "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {
+                                "type": "text",
+                                "flex": 0,
+                                "size": "xxs",
+                                "color": "#aaaaaa",
+                                "text": "{{ item.created_at}}に投稿"
+                            },
+                            {
+                                "type": "filler"
+                            },
+                            {
+                                "type": "text",
+                                "flex": 0,
+                                "size": "xxs",
+                                "color": "#aaaaaa",
+                                "text": "{{ item.likes_count }}いいね"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "text",
+                        "weight": "bold",
+                        "size": "lg",
+                        "color": "#aaaaaa",
+                        "text": "{{ item.user.id }}"
+                    }
+                ]
+            },
+            "hero": {
+                "type": "image",
+                "url": "{{ item.user.profile_image_url }}",
+                "action": {
+                    "type": "message",
+                    "text": "users/{{ item.user.id }}"
+                }
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "sm",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "{{ item.title }}",
+                        "wrap": true,
+                        "weight": "bold",
+                        "color": "#444444",
+                        "size": "lg",
+                        "action": {
+                            "type": "uri",
+                            "uri": "{{ item.url }}"
+                        }
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "spacing": "sm",
+                        "contents": [
+                            {% for tag in item.tags %}
+                            {
+                                "type": "text",
+                                "flex": 0,
+                                "size": "sm",
+                                "color": "#aaaaaa",
+                                "text": "{{ tag.name }}",
+                                "action": {
+                                    "type": "message",
+                                    "text": "tags/{{ tag.name }}"
+                                }
+                            }{{ "," if not loop.last }}
+                            {% endfor %}
+                        ]
+                    }
+                ]
+            }
+        }{{ "," if not loop.last }}
+        {% endfor %}
+    ]
+}

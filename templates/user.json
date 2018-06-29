@@ -1,0 +1,97 @@
+{
+    "type": "bubble",
+    "header": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+            {
+                "type": "text",
+                "text": "{{ user.id }}",
+                "weight": "bold",
+                "color": "#aaaaaa",
+                "size": "lg"
+            }
+        ]
+    },
+    "hero": {
+        "type": "image",
+        "size": "lg",
+        "url": "{{ user.profile_image_url }}"
+    },
+    "body": {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+            {
+                "type": "text",
+                "wrap": true,
+                "text": "{{ user.description or ' ' }}"
+            },
+            {
+                "type": "separator"
+            }{{ "," if items }}
+            {% for item in items %}
+            {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "margin": "md",
+                        "size": "xxs",
+                        "color": "#aaaaaa",
+                        "text": "{{ item.created_at }}に投稿"
+                    },
+                    {
+                        "type": "text",
+                        "size": "sm",
+                        "text": "{{ item.title }}",
+                        "action": {
+                            "type": "uri",
+                            "uri": "{{ item.url }}"
+                        }
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "spacing": "sm",
+                        "contents": [
+                            {% for tag in item.tags %}
+                            {
+                                "type": "text",
+                                "flex": 0,
+                                "size": "sm",
+                                "color": "#aaaaaa",
+                                "text": "{{ tag.name }}",
+                                "action": {
+                                    "type": "message",
+                                    "text": "tags/{{ tag.name }}"
+                                }
+                            }{{ "," if not loop.last }}
+                            {% endfor %}
+                        ]
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "spacing": "sm",
+                        "contents": [
+                            {
+                                "type": "filler"
+                            },
+                            {
+                                "type": "text",
+                                "flex": 0,
+                                "size": "xxs",
+                                "color": "#aaaaaa",
+                                "text": "{{ item.likes_count }}いいね"
+                            }
+                        ]
+                    }
+                ]
+            }{{ ',' if not loop.last }}
+            {% endfor %}
+        ]
+    }
+}
